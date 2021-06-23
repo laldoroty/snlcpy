@@ -1,3 +1,4 @@
+import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
 import numpy as np
@@ -156,7 +157,7 @@ def make_fittedlc(fpca_f, mpfit_result, fpca_dir='', return_func=True):
 fpca_f = 'B'
 
 basis = get_pctemplates(fpca_f)
-print(basis[0](-20))
+# print(basis[0](-20))
 
 
 def get_modelval(date, theta):
@@ -177,8 +178,31 @@ def get_modelval(date, theta):
     return y
 
 
-theta = [0, 0, 10, 0, 0, 10]
+def meritfunc(theta, input_data):
+    '''
+    Chisq to be minimized.
+    :m number of samples (len(data)):
+    :n number of parameters (len(theta)):
+    '''
+    x, y, ey = map(lambda xx: np.array(
+        input_data[xx]), ['date', 'mag', 'emag'])
+    y_model = get_modelval(x, theta)
+
+    resid = (y - y_model)/ey
+    resid = np.where(np.isnan(resid), 0, resid)
+    # resid_dict
+    return resid
+
+
+theta = [0, 0, 10, 0, 0, 0]
 x = np.arange(-10, 60, 1)
-print(get_modelval([0, 1], theta))
-plt.scatter(x, get_modelval(x, theta))
-plt.show()
+# print(get_modelval([0, 1], theta))
+# plt.scatter(x, get_modelval(x, theta))
+# plt.show()
+
+a = pd.read_csv('02boPriv.csv')
+# print(a)
+data = {'date': np.array(a['MJD_OBS']) - a['MJD_OBS'].tolist()[np.argmin(np.array(a['MAG']))], 'mag': np.array(
+    a['MAG']), 'emag': np.array(a['eMAG'])}
+print(data['date'])
+print(meritfunc(theta, data))
