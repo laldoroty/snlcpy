@@ -6,6 +6,7 @@ from numpy.core.fromnumeric import shape
 
 
 def test():
+    print(1)
     return
 
 
