@@ -1,7 +1,8 @@
 import numpy as np
+from astropy.table import Table
+from scipy.interpolate import interp1d
 
 # Use for testing:
-from astropy.table import Table
 from numpy.core.fromnumeric import shape
 
 
@@ -41,19 +42,19 @@ def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague',
             emag = np.array(data['emag'])
 
     # Read in data if given an astropy table
-    # I'm not sure how to check if something is an astropy table.
-    # if len(data) == 3 and isinstance(data[0], ???????):
-        #data = data[0]
-        #date, mag = np.array(data['date']), np.array(data['mag'])
-        # if 'emag' not in data.colnames:
-            #emag = np.array([1]*len(date))
-        # else:
-            #emag = np.array(data['emag'])
+    if len(data) == 1 and isinstance(data[0], Table):
+        data = data[0]
+        date, mag = np.array(data['date']), np.array(data['mag'])
+        if 'emag' not in data.colnames:
+            emag = np.array([1]*len(date))
+        else:
+            emag = np.array(data['emag'])
+
+    print(date, mag, emag)
 
     # Initial guess
     init_maxdate = date[np.argmin(mag)]
-
-    print(date, mag, emag)
+    init_guess = [init_maxdate, 17, 1, 0, 0, 0]
 
     return
 
@@ -72,8 +73,10 @@ def make_fittedlc(fpca_f, mpfit_result, fpca_dir='', return_func=True):
     return lambda x: x**2
 
 
-test_dict = {'date': [1, 2, 3], 'mag': [3, 4, 5], 'emag': [4, 6, 3]}
-fit_pcparams(test_dict)
+# test_dict = {'date': [1, 2, 3], 'mag': [3, 4, 5], 'emag': [4, 6, 3]}
+# fit_pcparams(test_dict)
 test_tab = Table([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                  names=('date', 'mag', 'emag'))
 print('success')
+fit_pcparams(test_tab)
+print('success #2')
