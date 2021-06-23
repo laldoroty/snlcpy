@@ -5,11 +5,6 @@ from astropy.table import Table
 from numpy.core.fromnumeric import shape
 
 
-def test():
-    print(1)
-    return
-
-
 def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague',
                  init_guess=None, components=2, fpca_dir='',
                  penalty=True, penalty_increase=None, penalty_decrease=None):
