@@ -4,6 +4,7 @@ import numpy as np
 from astropy.table import Table
 from numpy.core.fromnumeric import shape
 
+
 def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague',
                  init_guess=None, components=2, fpca_dir='',
                  penalty=True, penalty_increase=None, penalty_decrease=None):
@@ -20,7 +21,7 @@ def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague',
     return fpca_f, mpfit_result
     mpfit_result: as long as it contains attributes params, covar, chi2
     '''
-    ## Read in data if given separate arrays or lists
+    # Read in data if given separate arrays or lists
     if len(data) == 3:
         date, mag, emag = [np.array(ii) for ii in data]
     if len(data) == 2:
@@ -29,7 +30,7 @@ def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague',
         # This makes the denominator in the merit function = 1
         emag = np.array([1]*len(date))
 
-    ## Read in data if given a dictionary
+    # Read in data if given a dictionary
     if len(data) == 1 and isinstance(data[0], dict):
         data = data[0]
         date, mag = map(lambda x: np.array(data[x]), ['date', 'mag'])
@@ -39,14 +40,14 @@ def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague',
         else:
             emag = np.array(data['emag'])
 
-    ## Read in data if given an astropy table
-    ## I'm not sure how to check if something is an astropy table.
-    #if len(data) == 3 and isinstance(data[0], ???????):
+    # Read in data if given an astropy table
+    # I'm not sure how to check if something is an astropy table.
+    # if len(data) == 3 and isinstance(data[0], ???????):
         #data = data[0]
         #date, mag = np.array(data['date']), np.array(data['mag'])
-        #if 'emag' not in data.colnames:
+        # if 'emag' not in data.colnames:
             #emag = np.array([1]*len(date))
-        #else:
+        # else:
             #emag = np.array(data['emag'])
 
     # Initial guess
@@ -68,12 +69,11 @@ def make_fittedlc(fpca_f, mpfit_result, fpca_dir='', return_func=True):
     return function or grids depending on return_func
     '''
 
-
-    
     return lambda x: x**2
 
 
 test_dict = {'date': [1, 2, 3], 'mag': [3, 4, 5], 'emag': [4, 6, 3]}
 fit_pcparams(test_dict)
-test_tab = Table([[1,2,3],[4,5,6],[7,8,9]], names=('date', 'mag', 'emag'))
+test_tab = Table([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                 names=('date', 'mag', 'emag'))
 print('success')
