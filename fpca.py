@@ -100,8 +100,10 @@ def fit_pcparams(*data, mag=None, magerr=None, fpca_f='vague', init_guess=None,
         '''
         Calculates the linear combination of coefficients and PC vectors at every point in the grid.
         Given a phase and parameters, returns the corresponding fitted magnitude.
-        :params phase:
-        :params theta:
+        :params date: float or list/array
+        :params theta: list of length 6. fitting parameters 
+
+        return: float if input is float, array if input is array [tmax, mmax, a1, a2, a3, a4]
         '''
         if not isinstance(date, float):
             date = np.array(date)
@@ -172,7 +174,7 @@ def get_modelval(date, theta):
     tmax, mmax, a1, a2, a3, a4 = theta
     coeffs = [1, a1, a2, a3, a4]
     mphase = date-tmax
-    y = mmax + (np.dot((coeffs),
+    y = mmax + (np.dot(coeffs,
                        np.array([fbasis(mphase) for fbasis in basis])))
 
     return y
