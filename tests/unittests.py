@@ -4,13 +4,11 @@ from snlcpy import fpca
 
 def test_getpctemplates():
     '''
-    Tests that the correct FPCA templates are pulled.
+    Tests that the FPCA templates are pulled.
     '''
-    filters = ['B','V','R','I']
-    print(filters)
-
+    filters = ['B','V','R','I','vague']
     for filt in filters:
         PCs = fpca.get_pctemplates(filt)
-        print(filt)
+        assert len(PCs) == 5
 
 test_getpctemplates()
