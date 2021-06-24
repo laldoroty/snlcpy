@@ -4,9 +4,11 @@ from numpy.core.fromnumeric import shape
 import numpy as np
 from astropy.table import Table
 from scipy.interpolate import interp1d
-import os
+import os,sys
 # from kapteyn import kmpfit
-FPCA_dir = './LCfPCA_He'
+
+abspath = os.path.dirname(__file__)
+FPCA_dir = abspath + '/LCfPCA_He'
 
 
 # def phase_limit(fpca_f):
@@ -33,7 +35,9 @@ def get_pctemplates(fpca_f):
     else:
         fname = 'bandVague.txt'
 
+    
     fpca_file = os.path.join(FPCA_dir, fname)
+    print(fpca_file)
     t_pc = Table.read(fpca_file, format='ascii')
     phase, mean, pc1, pc2, pc3, pc4 = t_pc['phase'], t_pc['mean'], \
         t_pc['FPC1'], t_pc['FPC2'], t_pc['FPC3'], t_pc['FPC4']
@@ -202,7 +206,7 @@ x = np.arange(-10, 60, 1)
 # plt.scatter(x, get_modelval(x, theta))
 # plt.show()
 
-a = pd.read_csv('02boPriv.csv')
+a = pd.read_csv(os.path.join(abspath, '02boPriv.csv'))
 # print(a)
 data = {'date': np.array(a['MJD_OBS']) - a['MJD_OBS'].tolist()[np.argmin(np.array(a['MAG']))], 'mag': np.array(
     a['MAG']), 'emag': np.array(a['eMAG'])}
