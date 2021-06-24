@@ -37,7 +37,6 @@ def get_pctemplates(fpca_f):
 
     
     fpca_file = os.path.join(FPCA_dir, fname)
-    print(fpca_file)
     t_pc = Table.read(fpca_file, format='ascii')
     phase, mean, pc1, pc2, pc3, pc4 = t_pc['phase'], t_pc['mean'], \
         t_pc['FPC1'], t_pc['FPC2'], t_pc['FPC3'], t_pc['FPC4']
