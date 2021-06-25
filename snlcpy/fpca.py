@@ -285,7 +285,7 @@ x = np.arange(-10, 60, 1)
 # plt.show()
 
 a = pd.read_csv(os.path.join(abspath, '02boPriv.csv'))
-a = a[a.Passband == 'B(kait3)']
+a = a[a.Passband == 'V(kait3)']
 # print(a)
 data = {'date': np.array(a['MJD_OBS']) - a['MJD_OBS'].tolist()[np.argmin(np.array(a['MAG']))], 'mag': np.array(
     a['MAG']), 'emag': np.array(a['eMAG'])}
