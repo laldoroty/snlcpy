@@ -1,6 +1,8 @@
 # snlcpy
 Python package that uses the results from [He et al. 2018](https://ui.adsabs.harvard.edu/abs/2018ApJ...857..110H/abstract) in order to fit light curves to SNe Ia. Please cite this paper, as well as [ZENODO LINK], when using this code. 
 
+Package by [Lauren Aldoroty](https://laldoroty.github.io), Jiawen Yang 2021.
+
 ## Installation
 1. **Before installing snlcpy**, you need [pycmpfit](https://github.com/cosmonaut/pycmpfit). pycmpfit has a dependency on cython. Use the following code to download and install pycmpfit:
 
@@ -8,6 +10,8 @@ Python package that uses the results from [He et al. 2018](https://ui.adsabs.har
 git clone https://github.com/cosmonaut/pycmpfit
 python setup.py build_ext
 ```
+
+NOTE: The developers modified their pycmpfit packages to record a covariance matrix. Currently, the above version of pycmpfit will not work. 
 
 ## Using snlcpy
 
