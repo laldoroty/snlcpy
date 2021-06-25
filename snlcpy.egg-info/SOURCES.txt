@@ -1,8 +1,0 @@
-README.md
-setup.py
-snlcpy/__init__.py
-snlcpy/fpca.py
-snlcpy.egg-info/PKG-INFO
-snlcpy.egg-info/SOURCES.txt
-snlcpy.egg-info/dependency_links.txt
-snlcpy.egg-info/top_level.txt
