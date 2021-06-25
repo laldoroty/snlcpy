@@ -1,4 +1,3 @@
-import pycmpfit
 import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
@@ -7,7 +6,8 @@ from astropy.table import Table
 from scipy.interpolate import interp1d
 import os
 import sys
-# sys.path.insert(1, '/home/astrolab/pycmpfit/build/lib.linux-x86_64-3.6')
+sys.path.insert(1, '/home/astrolab/pycmpfit/build/lib.linux-x86_64-3.6')
+import pycmpfit
 # from kapteyn import kmpfit
 
 abspath = os.path.dirname(__file__)
@@ -218,16 +218,18 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
         date = np.arange(-10, 50, 0.1)
     else:
         date = np.arange(-10, 40, 0.1)
+    
+    PCvecs = np.array(get_pctemplates(fpca_f))
+    PCvecs_discrete = []
+    for i, vec in enumerate(PCvecs):
+        PCvecs_discrete.append([vec(t) for t in date])
+    PCvecs_discrete = np.array(PCvecs_discrete)
 
-    PCvecs = get_pctemplates(fpca_f)
     coeffs = np.array([fit_result['params'][i] for i in range(2, 6)])
     coeffs = np.insert(coeffs, 0, 1)
-    print(coeffs)
     date += fit_result['params'][0]
-    print(PCvecs)
-    print(len(PCvecs))
-    LC = fit_result['params'][1] + np.sum(np.dot(PCvecs, coeffs))
-    lc_error = None
+    LC = fit_result['params'][1] + np.dot(np.transpose(PCvecs_discrete), coeffs)
+    lc_error = np.zeros(len(date)) # FIXME
     # all_the_jacobians = np.dstack((np.zeros(len(date)),
     #     np.zeros(len(date)),
     #     np.full(len(date),PCvecs[0]),
@@ -241,7 +243,7 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     if return_func == False:
         return date, LC, lc_error
     else:
-        return interp1d(date, LC), interp1d(date, lc_error)
+        return interp1d(date, LC) # ADD THE LC ERROR RETURN
 
 ###############################################################################
 # # test_dict = {'date': [1, 2, 3], 'mag': [3, 4, 5], 'emag': [4, 6, 3]}
@@ -295,10 +297,14 @@ res = fit_pcparams(data, fpca_f='vague', init_guess=None,
                    penalty_decrease=None, boundary=None)
 
 print('parameters', res['params'])
-# print(make_fittedlc(fpca_f, res, fpca_dir='', return_func=True))
-print(get_modelval(data['date'], res['params'], 'vague'))
-plt.scatter(data['date'], get_modelval(
-    data['date'], res['params'], 'vague'), label='model')
-plt.scatter(data['date'], data['mag'], label='data')
-plt.legend()
+print('make fitted lc')
+lc = make_fittedlc(fpca_f, res, fpca_dir='', return_func=True)
+plt.plot(np.arange(-9,40,0.1), lc(np.arange(-9,40,0.1)))
+plt.gca().invert_yaxis()
 plt.show()
+# print(get_modelval(data['date'], res['params'], 'vague'))
+# plt.scatter(data['date'], get_modelval(
+#     data['date'], res['params'], 'vague'), label='model')
+# plt.scatter(data['date'], data['mag'], label='data')
+# plt.legend()
+# plt.show()
