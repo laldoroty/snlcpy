@@ -169,7 +169,7 @@ def fit_pcparams(*data, fpca_f='vague', init_guess=None,
             after_diff = model_y[afteridx+1:] - model_y[afteridx:-1]
             after_violate = np.sum(np.where(after_diff > 0, 0, after_diff))
 
-            resid += max_violate*10 + after_violate * \
+            resid += max_violate*10 + abs(after_violate) * \
                 10 + abs(pre_violate*10)    #
 
         user_dict = {"deviates": resid}
