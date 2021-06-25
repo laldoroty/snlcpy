@@ -229,21 +229,24 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     coeffs = np.insert(coeffs, 0, 1)
     date += fit_result['params'][0]
     LC = fit_result['params'][1] + np.dot(np.transpose(PCvecs_discrete), coeffs)
-    lc_error = np.zeros(len(date)) # FIXME
-    # all_the_jacobians = np.dstack((np.zeros(len(date)),
-    #     np.zeros(len(date)),
-    #     np.full(len(date),PCvecs[0]),
-    #     np.full(len(date),PCvecs[1]),
-    #     np.full(len(date),PCvecs[2]),
-    #     np.full(len(date),PCvecs[3])))
+    all_the_jacobians = np.column_stack((np.zeros(len(date)),
+        np.zeros(len(date)),
+        PCvecs_discrete[0],
+        PCvecs_discrete[1],
+        PCvecs_discrete[2],
+        PCvecs_discrete[3]))
 
-    # lc_error = np.sqrt(np.matmul(np.matmul(all_the_jacobians,
-    #     fit_result['mpfit_result'].covar)),np.transpose(all_the_jacobians))
+    lc_error = []
+    # I don't want this to be a loop, but it works, so make this a vector operation later. 
+    for jac in all_the_jacobians:
+        j = np.sqrt(np.matmul(jac,np.matmul(fit_result['mpfit_result'].covar,np.transpose(jac))))
+        lc_error.append(j)
+    lc_error = np.array(lc_error)
 
     if return_func == False:
         return date, LC, lc_error
     else:
-        return interp1d(date, LC) # ADD THE LC ERROR RETURN
+        return interp1d(date, LC), interp1d(date, lc_error)
 
 ###############################################################################
 # # test_dict = {'date': [1, 2, 3], 'mag': [3, 4, 5], 'emag': [4, 6, 3]}
@@ -255,7 +258,7 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
 # print('success #2')
 
 
-fpca_f = 'B'
+fpca_f = 'V'
 
 basis = get_pctemplates(fpca_f)
 # print(basis[0](-20))
@@ -292,19 +295,26 @@ a = a[a.Passband == 'V(kait3)']
 data = {'date': np.array(a['MJD_OBS']) - a['MJD_OBS'].tolist()[np.argmin(np.array(a['MAG']))], 'mag': np.array(
     a['MAG']), 'emag': np.array(a['eMAG'])}
 
-res = fit_pcparams(data, fpca_f='vague', init_guess=None,
-                   components=2, penalty=True, penalty_increase=None,
+res = fit_pcparams(data, fpca_f=fpca_f, init_guess=None,
+                   components=2, penalty=False, penalty_increase=None,
                    penalty_decrease=None, boundary=None)
 
-print('parameters', res['params'])
-print('make fitted lc')
-lc = make_fittedlc(fpca_f, res, fpca_dir='', return_func=True)
-plt.plot(np.arange(-9,40,0.1), lc(np.arange(-9,40,0.1)))
-plt.gca().invert_yaxis()
-plt.show()
-# print(get_modelval(data['date'], res['params'], 'vague'))
-# plt.scatter(data['date'], get_modelval(
-#     data['date'], res['params'], 'vague'), label='model')
-# plt.scatter(data['date'], data['mag'], label='data')
+# Test make_fittedlc() with return_func=True:
+# lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=True)
+# plt.errorbar(data['date'],data['mag'],yerr=data['emag'],marker='o',linestyle='')
+# plt.plot(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)),label='make fitted lc')
+# plt.plot(np.arange(-9,50,0.1),get_modelval(np.arange(-9,50,0.1),res['params'],fpca_f),label='get modelval')
+# plt.fill_between(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)) + lcerr(np.arange(-9,50,0.1)), lc(np.arange(-9,50,0.1)) - lcerr(np.arange(-9,50,0.1)))
+# plt.gca().invert_yaxis()
+# plt.legend()
+# plt.show()
+
+# Test make_fittedlc() with return_func=False:
+# epoch,lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=False)
+# plt.errorbar(data['date'],data['mag'],yerr=data['emag'],marker='o',linestyle='')
+# plt.plot(epoch,lc,label='make fitted lc')
+# plt.plot(np.arange(-9,50,0.1),get_modelval(np.arange(-9,50,0.1),res['params'],fpca_f),label='get modelval')
+# plt.fill_between(epoch,lc+lcerr, lc-lcerr)
+# plt.gca().invert_yaxis()
 # plt.legend()
 # plt.show()
