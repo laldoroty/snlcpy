@@ -221,7 +221,7 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     
     PCvecs = np.array(get_pctemplates(fpca_f))
     PCvecs_discrete = []
-    for i, vec in enumerate(PCvecs):
+    for vec in PCvecs:
         PCvecs_discrete.append([vec(t) for t in date])
     PCvecs_discrete = np.array(PCvecs_discrete)
 
