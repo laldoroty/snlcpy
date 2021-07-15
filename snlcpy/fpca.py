@@ -229,7 +229,7 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     coeffs = np.insert(coeffs, 0, 1)
     date += fit_result['params'][0]
     LC = fit_result['params'][1] + np.dot(np.transpose(PCvecs_discrete), coeffs)
-    all_the_jacobians = np.column_stack((np.zeros(len(date)),
+    all_the_jacobians = np.column_stack((np.ones(len(date)),
         np.ones(len(date)),
         PCvecs_discrete[0],
         PCvecs_discrete[1],
