@@ -230,7 +230,7 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     date += fit_result['params'][0]
     LC = fit_result['params'][1] + np.dot(np.transpose(PCvecs_discrete), coeffs)
     all_the_jacobians = np.column_stack((np.zeros(len(date)),
-        np.zeros(len(date)),
+        np.ones(len(date)),
         PCvecs_discrete[0],
         PCvecs_discrete[1],
         PCvecs_discrete[2],
@@ -300,14 +300,14 @@ res = fit_pcparams(data, fpca_f=fpca_f, init_guess=None,
                    penalty_decrease=None, boundary=None)
 
 # Test make_fittedlc() with return_func=True:
-# lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=True)
-# plt.errorbar(data['date'],data['mag'],yerr=data['emag'],marker='o',linestyle='')
-# plt.plot(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)),label='make fitted lc')
-# plt.plot(np.arange(-9,50,0.1),get_modelval(np.arange(-9,50,0.1),res['params'],fpca_f),label='get modelval')
-# plt.fill_between(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)) + lcerr(np.arange(-9,50,0.1)), lc(np.arange(-9,50,0.1)) - lcerr(np.arange(-9,50,0.1)))
-# plt.gca().invert_yaxis()
-# plt.legend()
-# plt.show()
+lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=True)
+plt.errorbar(data['date'],data['mag'],yerr=data['emag'],marker='o',linestyle='')
+plt.plot(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)),label='make fitted lc')
+plt.plot(np.arange(-9,50,0.1),get_modelval(np.arange(-9,50,0.1),res['params'],fpca_f),label='get modelval')
+plt.fill_between(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)) + lcerr(np.arange(-9,50,0.1)), lc(np.arange(-9,50,0.1)) - lcerr(np.arange(-9,50,0.1)))
+plt.gca().invert_yaxis()
+plt.legend()
+plt.show()
 
 # Test make_fittedlc() with return_func=False:
 # epoch,lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=False)
