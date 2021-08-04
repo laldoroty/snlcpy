@@ -3,15 +3,19 @@ Python package that uses the results from [He et al. 2018](https://ui.adsabs.har
 
 Package by [Lauren Aldoroty](https://laldoroty.github.io), Jiawen Yang 2021.
 
+Package currently incomplete. 
+
 ## Installation
-1. **Before installing snlcpy**, you need [pycmpfit](https://github.com/cosmonaut/pycmpfit). pycmpfit has a dependency on cython. Use the following code to download and install pycmpfit:
 
 ```
-git clone https://github.com/cosmonaut/pycmpfit
-python setup.py build_ext
+git clone https://github.com/laldoroty/snlcpy
 ```
 
-NOTE: The developers modified their pycmpfit packages to record a covariance matrix. Currently, the above version of pycmpfit will not work. 
+Then, `cd` into the `snlcpy` directory.
+
+```
+python setup.py install
+```
 
 ## Using snlcpy
 
