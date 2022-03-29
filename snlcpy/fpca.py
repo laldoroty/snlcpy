@@ -6,9 +6,7 @@ from astropy.table import Table
 from scipy.interpolate import interp1d
 import os
 import sys
-sys.path.insert(1, '/home/astrolab/pycmpfit/build/lib.linux-x86_64-3.6')
 import pycmpfit
-# from kapteyn import kmpfit
 
 abspath = os.path.dirname(__file__)
 FPCA_dir = os.path.join(abspath, 'LCfPCA_He')
@@ -208,7 +206,7 @@ def fit_pcparams(*data, fpca_f='vague', init_guess=None,
 def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     '''
     :params fpca_f: fpca filter, options: vague, B, V, R, I
-    :params mpfit_result
+    :params mpfit_result: output from fit_pcparams()
     :params fpca_dir: directory where fpca templates are at
     :params return_func: if true, return function, if not, return grids
 
@@ -246,75 +244,53 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     if return_func == False:
         return date, LC, lc_error
     else:
-        return interp1d(date, LC), interp1d(date, lc_error)
+        return interp1d(date, LC, bounds_error=False), interp1d(date, lc_error, bounds_error=False)
 
-###############################################################################
-# # test_dict = {'date': [1, 2, 3], 'mag': [3, 4, 5], 'emag': [4, 6, 3]}
-# # fit_pcparams(test_dict)
-# test_tab = Table([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-#                  names=('date', 'mag', 'emag'))
-# print('success')
-# fit_pcparams(test_tab)
-# print('success #2')
-
-
-fpca_f = 'V'
-
-basis = get_pctemplates(fpca_f)
-# print(basis[0](-20))
-
-
-def get_modelval(date, theta, fpca_f):
+def plot_lc(*data,fit,input_func=True):
     '''
-    Calculates the linear combination of coefficients and PC vectors at every point in the grid.
-    Given a phase and parameters, returns the corresponding fitted magnitude.
-    :params phase:
-    :params theta:
+    Shortcut to plot light curves. 
+    :params input_func: True if input is continuous, i.e., scipy.interpolate.interp1d(). False if arrays are provided.
+    :params data
+    :params fit: Result from make_fittedlc().
     '''
-    basis = get_pctemplates(fpca_f)
-    if not isinstance(date, float):
-        date = np.array(date)
-    tmax, mmax, a1, a2, a3, a4 = theta
-    coeffs = [1, a1, a2, a3, a4]
-    mphase = date-tmax
-    y = mmax + (np.dot(coeffs,
-                       np.array([fbasis(mphase) for fbasis in basis])))
 
-    return y
+    x = np.arange(-10.0,50.0,0.1)
 
+    # Read in data if given separate arrays or lists
+    if len(data) == 3:
+        date, mag, emag = [np.array(ii) for ii in data]
+    if len(data) == 2:
+        date, mag = [np.array(ii) for ii in data]
+        # if no magnitude error is provided, then use constant 1 for all epochs.
+        # This makes the denominator in the merit function = 1
+        emag = np.array([1]*len(date))
 
-theta = [0, 0, 10, 0, 0, 0]
-x = np.arange(-10, 60, 1)
-# print(get_modelval([0, 1], theta))
-# plt.scatter(x, get_modelval(x, theta))
-# plt.show()
+    # Read in data if given a dictionary
+    if len(data) == 1 and isinstance(data[0], dict):
+        data = data[0]
+        date, mag = map(lambda x: np.array(data[x]), ['date', 'mag'])
+        if 'emag' not in data:
+            emag = np.array([1]*len(date))
+        else:
+            emag = np.array(data['emag'])
 
-a = pd.read_csv(os.path.join(abspath, '02boPriv.csv'))
-a = a[a.Passband == 'V(kait3)']
-# print(a)
-data = {'date': np.array(a['MJD_OBS']) - a['MJD_OBS'].tolist()[np.argmin(np.array(a['MAG']))], 'mag': np.array(
-    a['MAG']), 'emag': np.array(a['eMAG'])}
+    # Read in data if given an astropy table
+    if len(data) == 1 and isinstance(data[0], Table):
+        data = data[0]
+        date, mag = np.array(data['date']), np.array(data['mag'])
+        if 'emag' not in data.colnames:
+            emag = np.array([1]*len(date))
+        else:
+            emag = np.array(data['emag'])
 
-res = fit_pcparams(data, fpca_f=fpca_f, init_guess=None,
-                   components=2, penalty=False, penalty_increase=None,
-                   penalty_decrease=None, boundary=None)
+    plt.errorbar(date,mag,yerr=emag,color='C0',markersize=8)
 
-# Test make_fittedlc() with return_func=True:
-lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=True)
-plt.errorbar(data['date'],data['mag'],yerr=data['emag'],marker='o',linestyle='')
-plt.plot(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)),label='make fitted lc')
-plt.plot(np.arange(-9,50,0.1),get_modelval(np.arange(-9,50,0.1),res['params'],fpca_f),label='get modelval')
-plt.fill_between(np.arange(-9,50,0.1), lc(np.arange(-9,50,0.1)) + lcerr(np.arange(-9,50,0.1)), lc(np.arange(-9,50,0.1)) - lcerr(np.arange(-9,50,0.1)))
-plt.gca().invert_yaxis()
-plt.legend()
-plt.show()
+    if input_func: 
+        plt.plot(x, fit[0](x), color='C0', label='Fit')
+        plt.fill_between(x, fit[0](x) - fit[1](x), fit[0](x) + fit[1](x), color='C0', alpha=0.5)
+    else:
+        plt.plot(fit[0], fit[1], color='C0', label='Fit')
+        plt.fill_between(fit[0], fit[1] - fit[0], fit[1] + fit[0], color='C0', alpha=0.5)
 
-# Test make_fittedlc() with return_func=False:
-# epoch,lc,lcerr = make_fittedlc(fpca_f, res, fpca_dir='', return_func=False)
-# plt.errorbar(data['date'],data['mag'],yerr=data['emag'],marker='o',linestyle='')
-# plt.plot(epoch,lc,label='make fitted lc')
-# plt.plot(np.arange(-9,50,0.1),get_modelval(np.arange(-9,50,0.1),res['params'],fpca_f),label='get modelval')
-# plt.fill_between(epoch,lc+lcerr, lc-lcerr)
-# plt.gca().invert_yaxis()
-# plt.legend()
-# plt.show()
+    plt.legend()
+    plt.show()
