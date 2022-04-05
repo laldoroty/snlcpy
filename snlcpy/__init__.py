@@ -1,2 +1,2 @@
 from .fpca import *
-import plotaesthetics
+from .plotaesthetics import *
