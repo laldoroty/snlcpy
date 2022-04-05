@@ -68,8 +68,18 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
     return fpca_f, mpfit_result
     mpfit_result: as long as it contains attributes params, covar, chi2
     '''
+
+    print('type of data:', type(data))
+    print('length of data: ', len(data))
+
+    # Lists of acceptable column names for dictionaries, astropy, and pandas inputs, integrate in later: 
+    date_colnames = ['date','epoch','JD','MJD']
+    mag_colnames = ['mag','magnitude']
+    emag_colnames = ['emag', 'e_mag', 'magerr', 'mag_err']
+
     # Read in data if given separate arrays or lists
-    if len(data) == 3:
+    # if len(data) == 3:
+    if isinstance(data, tuple):
         date, mag, emag = [np.array(ii) for ii in data]
     if len(data) == 2:
         date, mag = [np.array(ii) for ii in data]
@@ -95,6 +105,15 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
             emag = np.array([1]*len(date))
         else:
             emag = np.array(data['emag'])
+
+    # Read in data if given a pandas dataframe
+    if len(data) == 1 and isinstance(data, pd.DataFrame):
+        date = data['date']
+        mag = data['mag']
+        if 'emag' not in data.colnames:
+            emag = np.array([1]*len(date))
+        else:
+            emag = data['emag']
 
     def get_modelval(date, theta, fpca_f):
         '''
