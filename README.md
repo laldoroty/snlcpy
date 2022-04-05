@@ -19,15 +19,18 @@ python setup.py install
 
 ## Using snlcpy
 
-snlcpy accepts several input types for data. For date, magnitude, and magnitude error, you may use three lists, three numpy arrays, an astropy table, or a dictionary. Magnitude error is an optional input. If you include magnitude error, the FPCA fit will be weighted by these errors. 
+snlcpy accepts several input types for data. For date, magnitude, and magnitude error, you may use three lists, three numpy arrays, an astropy table, a pandas dataframe, or a dictionary. Magnitude error is an optional input. If you include magnitude error, the FPCA fit will be weighted by these errors. 
 
 snlcpy only fits one photometric bandpass at a time. Available templates are Johnson *B, V, R, I* filters and one 'vague' template, which may be used for any bandpass. If a Johnson filter is not specified in fit_params(), the program will default to 'vague'. 
 
 ### Example
-
+#### Using a pandas dataframe
 ```
 sn = pd.read_csv('SN2011fe.csv')
 data = {'date': epoch, 'mag': mag, 'emag': emag}
 res = fit_pcparams(data,'B',components=2)
 lc = make_fittedlc('B', res)
 ```
+#### Using an astropy table
+#### Using three lists or numpy arrays
+#### Using a dictionary
