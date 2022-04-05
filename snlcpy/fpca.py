@@ -50,7 +50,7 @@ def get_pctemplates(fpca_f):
     return [fpc0, fpc1, fpc2, fpc3, fpc4]
 
 
-def fit_pcparams(*data, fpca_f='vague', init_guess=None,
+def fit_pcparams(data, fpca_f='vague', init_guess=None,
                  components=2, penalty=True, penalty_increase=None,
                  penalty_decrease=None, boundary=None):
     '''
