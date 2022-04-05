@@ -69,35 +69,61 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
     mpfit_result: as long as it contains attributes params, covar, chi2
     '''
 
-    print('type of data:', type(data))
-    print('length of data: ', len(data))
+    # print('type of data:', type(data))
+    # print('length of data: ', len(data))
 
-    # Lists of acceptable column names for dictionaries, astropy, and pandas inputs, integrate in later: 
+    # Lists of acceptable column names for dictionaries, astropy, and pandas inputs: 
     date_colnames = ['date','epoch','JD','MJD']
     mag_colnames = ['mag','magnitude']
     emag_colnames = ['emag', 'e_mag', 'magerr', 'mag_err']
 
     # Read in data if given separate arrays or lists
-    if len(data) == 3:
+    if len(data) == 3 and (isinstance(data, list) or isinstance(data, np.ndarray) or isinstance(data, tuple)):
+        print('The input is three lists!')
         date, mag, emag = [np.array(ii) for ii in data]
-    if len(data) == 2:
+    elif len(data) == 2 and (isinstance(data, list) or isinstance(data, np.ndarray) or isinstance(data, tuple)):
+        print('The input is two lists!')
         date, mag = [np.array(ii) for ii in data]
         # if no magnitude error is provided, then use constant 1 for all epochs.
         # This makes the denominator in the merit function = 1
         emag = np.array([1]*len(date))
 
     # Read in data if given a dictionary
-    if len(data) == 1 and isinstance(data[0], dict):
-        data = data[0]
-        date, mag = map(lambda x: np.array(data[x]), ['date', 'mag'])
-        # I think this should be data.keys() in the next line:
-        if 'emag' not in data:
-            emag = np.array([1]*len(date))
+    if len(data) == 3 and isinstance(data, dict):
+        print('The input is a dictionary!')
+
+        # Get the dates:
+        if any(map(lambda x: x in data.keys(), date_colnames)):
+            for colname in date_colnames:
+                try: 
+                    date = np.array(data[colname])
+                except: pass
         else:
-            emag = np.array(data['emag'])
+            raise ValueError('Valid column names for date are ', date_colnames)
+
+        # Get the magnitudes:
+        if any(map(lambda x: x in data.keys(), mag_colnames)):
+            for colname in mag_colnames:
+                try:
+                    mag = np.array(data[colname])
+                except: pass
+        else:
+            raise ValueError('Valid column names for magnitude are ', mag_colnames)
+
+        # Get the magnitude errors:
+        if any(map(lambda x: x in data.keys(), emag_colnames)):
+            for colname in emag_colnames:
+                try:
+                    emag = np.array(data[colname])
+                except: pass
+        else:
+            # if no magnitude error is provided, then use constant 1 for all epochs.
+            # This makes the denominator in the merit function = 1
+             emag = np.array([1]*len(date))
 
     # Read in data if given an astropy table
     if len(data) == 1 and isinstance(data[0], Table):
+        print('The input is an astropy table!')
         data = data[0]
         date, mag = np.array(data['date']), np.array(data['mag'])
         if 'emag' not in data.colnames:
@@ -107,6 +133,7 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
 
     # Read in data if given a pandas dataframe
     if len(data) == 1 and isinstance(data, pd.DataFrame):
+        print('The input is a pandas dataframe!')
         date = data['date']
         mag = data['mag']
         if 'emag' not in data.colnames:
