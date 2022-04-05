@@ -1,3 +1,4 @@
+from unittest import result
 import pandas as pd
 import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
@@ -114,7 +115,7 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
                            np.array([fbasis(mphase) for fbasis in basis])))
 
         return y
-
+    
     def meritfunc(m, n, theta, input_data):
         # , penalty=penalty, \
         #       penalty_increase=penalty_increase, penalty_decrease=penalty_decrease):
@@ -139,6 +140,7 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
                 penalty_decrease = 35
 
             model_x = np.arange(-10, 50, 0.01) + theta[0]
+            # print(model_x)
             model_y = get_modelval(model_x, theta, fpca_f)
             idx = ~np.isnan(model_y)
             model_x = model_x[idx]
@@ -158,7 +160,7 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
 
             # second add the constraints of monotonically increase before penalty_increase
             # note preidx here is a number
-            preidx = np.sum(model_x < penalty_increase)
+            preidx = np.sum(model_x < penalty_increase+theta[0])
             pre_diff = model_y[1:preidx] - model_y[0:preidx-1]
             pre_violate = np.sum(np.where(pre_diff < 0, 0, pre_diff))
 
@@ -174,9 +176,10 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
         return user_dict
 
     if init_guess is None:
+
         init_guess = [date[np.argmin(mag)], 17, 1, 0, 0, 0]
     init_guess = np.array(init_guess)
-
+    # print(init_guess)
     m, n = len(date), len(init_guess)
     input_data = {'date': date, 'mag': mag, 'emag': emag,
                   'fpca_f': fpca_f, 'penalty_increase': penalty_increase, 'penalty_decrease': penalty_decrease}
@@ -191,7 +194,8 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
         for ii in range(components):
             py_mp_par[2+ii].limited = [1, 1]
             py_mp_par[2+ii].limits = boundary[ii]
-
+    # print(input_data)
+    # print(init_guess)
     fit = pycmpfit.Mpfit(meritfunc, m, init_guess,
                          private_data=input_data, py_mp_par=py_mp_par)
     fit.mpfit()  # NOTE now init_guess has been updated
@@ -246,7 +250,7 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     else:
         return interp1d(date, LC, bounds_error=False), interp1d(date, lc_error, bounds_error=False)
 
-def plot_lc(*data,fit,input_func=True):
+def plot_lc(data,fit_result,fpca_f, fpca_dir='', input_func=True):
     '''
     Shortcut to plot light curves. 
     :params input_func: True if input is continuous, i.e., scipy.interpolate.interp1d(). False if arrays are provided.
@@ -254,7 +258,10 @@ def plot_lc(*data,fit,input_func=True):
     :params fit: Result from make_fittedlc().
     '''
 
-    x = np.arange(-10.0,50.0,0.1)
+    fig, ax =plt.subplots(figsize=(10,8))
+    fit = make_fittedlc(fpca_f, fit_result,fpca_dir=fpca_dir, return_func=True)
+
+    x = np.arange(-10.0,50.0,0.1)+fit_result['params'][0]
 
     # Read in data if given separate arrays or lists
     if len(data) == 3:
@@ -283,14 +290,16 @@ def plot_lc(*data,fit,input_func=True):
         else:
             emag = np.array(data['emag'])
 
-    plt.errorbar(date,mag,yerr=emag,color='C0',markersize=8)
+    ax.scatter(date,mag,s=20,edgecolor='k')
+    ax.errorbar(date,mag,yerr=emag,color='C0',markersize=10,ls='none')
 
     if input_func: 
-        plt.plot(x, fit[0](x), color='C0', label='Fit')
-        plt.fill_between(x, fit[0](x) - fit[1](x), fit[0](x) + fit[1](x), color='C0', alpha=0.5)
+        ax.plot(x, fit[0](x), color='C0', label='Fit')
+        ax.fill_between(x, fit[0](x) - fit[1](x), fit[0](x) + fit[1](x), color='C0', alpha=0.5)
     else:
-        plt.plot(fit[0], fit[1], color='C0', label='Fit')
-        plt.fill_between(fit[0], fit[1] - fit[0], fit[1] + fit[0], color='C0', alpha=0.5)
+        ax.plot(fit[0], fit[1], color='C0', label='Fit')
+        ax.fill_between(fit[0], fit[1] - fit[0], fit[1] + fit[0], color='C0', alpha=0.5)
 
+    ax.invert_yaxis()
     plt.legend()
     plt.show()
