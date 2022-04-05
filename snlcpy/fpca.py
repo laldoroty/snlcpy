@@ -70,6 +70,12 @@ def fit_pcparams(*data, fpca_f='vague', init_guess=None,
 
     print('type of data:', type(data))
     print('length of data: ', len(data))
+
+    # Lists of acceptable column names for dictionaries, astropy, and pandas inputs, integrate in later: 
+    date_colnames = ['date','epoch','JD','MJD']
+    mag_colnames = ['mag','magnitude']
+    emag_colnames = ['emag', 'e_mag', 'magerr', 'mag_err']
+
     # Read in data if given separate arrays or lists
     # if len(data) == 3:
     if isinstance(data, tuple):
