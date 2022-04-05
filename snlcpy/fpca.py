@@ -78,8 +78,7 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
     emag_colnames = ['emag', 'e_mag', 'magerr', 'mag_err']
 
     # Read in data if given separate arrays or lists
-    # if len(data) == 3:
-    if isinstance(data, tuple):
+    if len(data) == 3:
         date, mag, emag = [np.array(ii) for ii in data]
     if len(data) == 2:
         date, mag = [np.array(ii) for ii in data]
