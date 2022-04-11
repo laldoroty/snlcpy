@@ -51,11 +51,13 @@ def get_pctemplates(fpca_f):
     return [fpc0, fpc1, fpc2, fpc3, fpc4]
 
 
-def fit_pcparams(data, fpca_f='vague', init_guess=None,
+def fit_pcparams(date,mag,emag=None, fpca_f='vague', init_guess=None,
                  components=2, penalty=True, penalty_increase=None,
                  penalty_decrease=None, boundary=None):
     '''
-    :params data: list of dates, OR 3*n array or n*3 array when mag and magerr are None
+    :params date: list or numpy array of dates 
+    :params mag: list or numpy array of magnitudes
+    :params emag: list or numpy array of magnitude errors
     :params fpca_f: fpca filter that you want to use to fit the lc. options:\
                     vague, B, V, R, I
     :params init_guess: list, initial guess of parameters, None for default
@@ -69,77 +71,14 @@ def fit_pcparams(data, fpca_f='vague', init_guess=None,
     mpfit_result: as long as it contains attributes params, covar, chi2
     '''
 
-    # print('type of data:', type(data))
-    # print('length of data: ', len(data))
-
-    # Lists of acceptable column names for dictionaries, astropy, and pandas inputs: 
-    date_colnames = ['date','epoch','JD','MJD']
-    mag_colnames = ['mag','magnitude']
-    emag_colnames = ['emag', 'e_mag', 'magerr', 'mag_err']
-
     # Read in data if given separate arrays or lists
-    if len(data) == 3 and (isinstance(data, list) or isinstance(data, np.ndarray) or isinstance(data, tuple)):
-        print('The input is three lists!')
-        date, mag, emag = [np.array(ii) for ii in data]
-    elif len(data) == 2 and (isinstance(data, list) or isinstance(data, np.ndarray) or isinstance(data, tuple)):
-        print('The input is two lists!')
-        date, mag = [np.array(ii) for ii in data]
+    if emag is None:
         # if no magnitude error is provided, then use constant 1 for all epochs.
         # This makes the denominator in the merit function = 1
-        emag = np.array([1]*len(date))
+        date, mag, emag = np.array(date), np.array(mag), np.ones(len(date))
+    else:
+        date, mag, emag = np.array(date), np.array(mag), np.array(emag)
 
-    # Read in data if given a dictionary
-    if len(data) == 3 and isinstance(data, dict):
-        print('The input is a dictionary!')
-
-        # Get the dates:
-        if any(map(lambda x: x in data.keys(), date_colnames)):
-            for colname in date_colnames:
-                try: 
-                    date = np.array(data[colname])
-                except: pass
-        else:
-            raise ValueError('Valid column names for date are ', date_colnames)
-
-        # Get the magnitudes:
-        if any(map(lambda x: x in data.keys(), mag_colnames)):
-            for colname in mag_colnames:
-                try:
-                    mag = np.array(data[colname])
-                except: pass
-        else:
-            raise ValueError('Valid column names for magnitude are ', mag_colnames)
-
-        # Get the magnitude errors:
-        if any(map(lambda x: x in data.keys(), emag_colnames)):
-            for colname in emag_colnames:
-                try:
-                    emag = np.array(data[colname])
-                except: pass
-        else:
-            # if no magnitude error is provided, then use constant 1 for all epochs.
-            # This makes the denominator in the merit function = 1
-             emag = np.array([1]*len(date))
-
-    # Read in data if given an astropy table
-    if len(data) == 1 and isinstance(data[0], Table):
-        print('The input is an astropy table!')
-        data = data[0]
-        date, mag = np.array(data['date']), np.array(data['mag'])
-        if 'emag' not in data.colnames:
-            emag = np.array([1]*len(date))
-        else:
-            emag = np.array(data['emag'])
-
-    # Read in data if given a pandas dataframe
-    if len(data) == 1 and isinstance(data, pd.DataFrame):
-        print('The input is a pandas dataframe!')
-        date = data['date']
-        mag = data['mag']
-        if 'emag' not in data.colnames:
-            emag = np.array([1]*len(date))
-        else:
-            emag = data['emag']
 
     def get_modelval(date, theta, fpca_f):
         '''
@@ -295,12 +234,15 @@ def make_fittedlc(fpca_f, fit_result, fpca_dir='', return_func=True):
     else:
         return interp1d(date, LC, bounds_error=False), interp1d(date, lc_error, bounds_error=False)
 
-def plot_lc(data,fit_result,fpca_f, fpca_dir='', input_func=True):
+def plot_lc(date,mag,fit_result,fpca_f,emag=None,fpca_dir='', input_func=True):
     '''
     Shortcut to plot light curves. 
-    :params input_func: True if input is continuous, i.e., scipy.interpolate.interp1d(). False if arrays are provided.
-    :params data
-    :params fit: Result from make_fittedlc().
+    :params date: list or numpy array of dates
+    :params mag: list or numpy array of magnitudes
+    :params fit_result: Result from make_fittedlc().
+    :params fpca_f: Template to plot.
+    :params emag: list or numpy array of magnitude errors
+    :params input_func: True (default) if input is continuous, i.e., scipy.interpolate.interp1d(). False if arrays are provided.
     '''
 
     fig, ax =plt.subplots(figsize=(10,8))
@@ -309,31 +251,13 @@ def plot_lc(data,fit_result,fpca_f, fpca_dir='', input_func=True):
     x = np.arange(-10.0,50.0,0.1)+fit_result['params'][0]
 
     # Read in data if given separate arrays or lists
-    if len(data) == 3:
-        date, mag, emag = [np.array(ii) for ii in data]
-    if len(data) == 2:
-        date, mag = [np.array(ii) for ii in data]
-        # if no magnitude error is provided, then use constant 1 for all epochs.
-        # This makes the denominator in the merit function = 1
-        emag = np.array([1]*len(date))
-
-    # Read in data if given a dictionary
-    if len(data) == 1 and isinstance(data[0], dict):
-        data = data[0]
-        date, mag = map(lambda x: np.array(data[x]), ['date', 'mag'])
-        if 'emag' not in data:
-            emag = np.array([1]*len(date))
-        else:
-            emag = np.array(data['emag'])
-
-    # Read in data if given an astropy table
-    if len(data) == 1 and isinstance(data[0], Table):
-        data = data[0]
-        date, mag = np.array(data['date']), np.array(data['mag'])
-        if 'emag' not in data.colnames:
-            emag = np.array([1]*len(date))
-        else:
-            emag = np.array(data['emag'])
+    if emag is not None:
+        date, mag, emag = np.array(date), np.array(mag), np.array(emag)
+    else:
+        date, mag = np.array(date), np.array(mag)
+        # if no magnitude error is provided, then use constant 0 for all epochs.
+        # No magnitude error will be plotted.
+        emag = np.zeros(len(date))
 
     ax.scatter(date,mag,s=20,edgecolor='k')
     ax.errorbar(date,mag,yerr=emag,color='C0',markersize=10,ls='none')
