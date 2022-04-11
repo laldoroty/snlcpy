@@ -31,10 +31,13 @@ date = np.array(B_data['JD'])
 mag = np.array(B_data['mag'])
 emag = np.array(B_data['mag_err'])
 res = snlcpy.fit_pcparams(date,mag,emag,'B')
+lc = snlcpy.make_fittedlc('B', res)
 snlcpy.plot_lc(date,mag,res,fpca_f='B',emag=emag,input_func=True)
 ```
+Note that if you do not provide `emag` and you get a fitting error about data type, it may be because you need to specify the arguments for the inputs. 
+Here, `lc` is a continuous function produced by `scipy.interpolate.interp1d`. In order to output an array instead, you should use `input_func=False` in `plot_lc()`, `return_func=False` in `make_fittedlc()`. 
 
-The fit result (i.e., PC coefficients) from this example can be accessed with:
+The fit result (i.e., PC coefficients) can be accessed with:
 
 ```
 print(res['params']))

@@ -12,19 +12,6 @@ import pycmpfit
 abspath = os.path.dirname(__file__)
 FPCA_dir = os.path.join(abspath, 'LCfPCA_He')
 
-
-# def phase_limit(fpca_f):
-#     '''
-#     :params fpca_f: Template filter that you'd like to use. B, V, R, I filters available, Otherwise, use band vague
-#     '''
-#     if fpca_f in ['B', 'V', 'R', 'I']:
-#         phaselim = [-10, 50]
-#     else:
-#         phaselim = [-10, 40]
-
-#     return phaselim
-
-
 def get_pctemplates(fpca_f):
     '''
     returns corresponding fpca templates
@@ -71,7 +58,7 @@ def fit_pcparams(date,mag,emag=None, fpca_f='vague', init_guess=None,
     mpfit_result: as long as it contains attributes params, covar, chi2
     '''
 
-    # Read in data if given separate arrays or lists
+    # Read in data
     if emag is None:
         # if no magnitude error is provided, then use constant 1 for all epochs.
         # This makes the denominator in the merit function = 1
@@ -101,13 +88,10 @@ def fit_pcparams(date,mag,emag=None, fpca_f='vague', init_guess=None,
         return y
     
     def meritfunc(m, n, theta, input_data):
-        # , penalty=penalty, \
-        #       penalty_increase=penalty_increase, penalty_decrease=penalty_decrease):
-        # FIXME not sure if mpfit allows users to add more arguments in userfunc?
         '''
         Chisq to be minimized.
-        :m number of samples (len(data)):
-        :n number of parameters (len(theta)):
+        :params m: number of samples (len(data)):
+        :params n: number of parameters (len(theta)):
         '''
         x, y, ey = map(lambda xx: np.array(
             input_data[xx]), ['date', 'mag', 'emag'])
@@ -163,7 +147,7 @@ def fit_pcparams(date,mag,emag=None, fpca_f='vague', init_guess=None,
 
         init_guess = [date[np.argmin(mag)], 17, 1, 0, 0, 0]
     init_guess = np.array(init_guess)
-    # print(init_guess)
+
     m, n = len(date), len(init_guess)
     input_data = {'date': date, 'mag': mag, 'emag': emag,
                   'fpca_f': fpca_f, 'penalty_increase': penalty_increase, 'penalty_decrease': penalty_decrease}
@@ -178,8 +162,7 @@ def fit_pcparams(date,mag,emag=None, fpca_f='vague', init_guess=None,
         for ii in range(components):
             py_mp_par[2+ii].limited = [1, 1]
             py_mp_par[2+ii].limits = boundary[ii]
-    # print(input_data)
-    # print(init_guess)
+
     fit = pycmpfit.Mpfit(meritfunc, m, init_guess,
                          private_data=input_data, py_mp_par=py_mp_par)
     fit.mpfit()  # NOTE now init_guess has been updated
@@ -239,18 +222,20 @@ def plot_lc(date,mag,fit_result,fpca_f,emag=None,fpca_dir='', input_func=True):
     Shortcut to plot light curves. 
     :params date: list or numpy array of dates
     :params mag: list or numpy array of magnitudes
-    :params fit_result: Result from make_fittedlc().
+    :params fit_result: Result from fit_pcparams().
+    :params fitted_lc: Result from make_fittedlc().
     :params fpca_f: Template to plot.
     :params emag: list or numpy array of magnitude errors
     :params input_func: True (default) if input is continuous, i.e., scipy.interpolate.interp1d(). False if arrays are provided.
     '''
 
     fig, ax =plt.subplots(figsize=(10,8))
-    fit = make_fittedlc(fpca_f, fit_result,fpca_dir=fpca_dir, return_func=True)
+
+    fit = make_fittedlc(fpca_f, fit_result,fpca_dir=fpca_dir, return_func=input_func)
 
     x = np.arange(-10.0,50.0,0.1)+fit_result['params'][0]
 
-    # Read in data if given separate arrays or lists
+    # Read in data
     if emag is not None:
         date, mag, emag = np.array(date), np.array(mag), np.array(emag)
     else:
@@ -267,7 +252,7 @@ def plot_lc(date,mag,fit_result,fpca_f,emag=None,fpca_dir='', input_func=True):
         ax.fill_between(x, fit[0](x) - fit[1](x), fit[0](x) + fit[1](x), color='C0', alpha=0.5)
     else:
         ax.plot(fit[0], fit[1], color='C0', label='Fit')
-        ax.fill_between(fit[0], fit[1] - fit[0], fit[1] + fit[0], color='C0', alpha=0.5)
+        ax.fill_between(fit[0], fit[1] - fit[2], fit[1] + fit[2], color='C0', alpha=0.5)
 
     ax.invert_yaxis()
     plt.legend()
