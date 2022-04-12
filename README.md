@@ -1,7 +1,7 @@
 # snlcpy
-Python package that uses the results from [He et al. 2018](https://ui.adsabs.harvard.edu/abs/2018ApJ...857..110H/abstract) in order to fit light curves to SNe Ia. Please cite this paper, as well as [ZENODO LINK], when using this code. 
+Python package that uses the results from [He et al. 2018](https://ui.adsabs.harvard.edu/abs/2018ApJ...857..110H/abstract) in order to fit light curves to SNe Ia. Please cite this paper, as well as the DOI for this software, `10.5281/zenodo.6450266`, when using this code. 
 
-Package by [Lauren Aldoroty](https://laldoroty.github.io), Jiawen Yang 2021.
+Package by [Lauren Aldoroty](https://laldoroty.github.io), [Jiawen Yang](jiawen.yang096@gmail.com), [Shiyuan He](heshiyuan@ruc.edu.cn) 2022.
 
 Package currently incomplete. 
 
